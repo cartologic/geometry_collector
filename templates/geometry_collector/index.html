@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ app_name }}</title>
+</head>
+<body>
+<div id='root'></div>
+<script>
+    const globalURLS = {
+        layerUpload:"{% url 'layer_upload' %}",
+        baseURL: "{% url 'home' %}",
+        layers: "{% url 'layer_browse' %}",
+        layerDetail: function (name) {
+            return globalURLS.layers + name
+        },
+        attributesAPI:"{% url 'api_dispatch_list' api_name='api' resource_name='attributes' %}",
+        layersAPI: "{% url 'api_dispatch_list' api_name='api' resource_name='layers' %}",
+    }
+</script>
+<script src="{{ STATIC_URL }}geometry_collector/dist/geometryCollector.bundle.js"></script>
+<script src="{{ STATIC_URL }}geometry_collector/dist/vendors-geometryCollector-chunk.js"></script>
+</body>
+</html>
