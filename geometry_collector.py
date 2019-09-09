@@ -59,7 +59,6 @@ def create_field(
     # Start Connection with read & update mode
     conn = ogr.Open(connection_string, 1)
     lyr = conn.GetLayer(layer_name)
-    out_featureDefn = out_layer.GetLayerDefn()
 
     lyr.StartTransaction()
 
@@ -68,6 +67,15 @@ def create_field(
 
     lyr.CommitTransaction()
     conn = None
+
+
+def get_field_index(connection_string, layer_name, attr):
+    conn = ogr.Open(connection_string, 1)
+    lyr = conn.GetLayer(layer_name)
+    layer_defn = lyr.GetLayerDefn()
+    for i in range(layer_defn.GetFieldCount()):
+        if (layer_defn.GetFieldDefn(i).GetName() == attr):
+            return i
 
 
 def collect_geometries(
@@ -98,7 +106,7 @@ def collect_geometries(
 
             # TODO: Set fields from fields input
             # TODO: Make sure the field is exist
-            # Set layer_name field => HARDCODED!!!
+            # Set layer_name field
             out_feature.SetField('layer_name', in_layer_name)
 
             # Start transactions with database
