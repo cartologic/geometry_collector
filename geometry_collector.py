@@ -58,15 +58,15 @@ def create_field(
 ):
     # Start Connection with read & update mode
     conn = ogr.Open(connection_string, 1)
-    out_layer = conn.GetLayer(out_layer_name)
+    lyr = conn.GetLayer(layer_name)
     out_featureDefn = out_layer.GetLayerDefn()
 
-    out_layer.StartTransaction()
+    lyr.StartTransaction()
 
     field_name = ogr.FieldDefn(field_name, field_type)
-    out_layer.CreateField(field_name)
+    lyr.CreateField(field_name)
 
-    out_layer.CommitTransaction()
+    lyr.CommitTransaction()
     conn = None
 
 
