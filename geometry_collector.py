@@ -56,21 +56,20 @@ def create_field(
     field_name,
     field_type,
 ):
+    ''' Creates a field for a given layer '''
     # Start Connection with read & update mode
     conn = ogr.Open(connection_string, 1)
     lyr = conn.GetLayer(layer_name)
-
     lyr.StartTransaction()
-
     field_name = ogr.FieldDefn(field_name, field_type)
     lyr.CreateField(field_name)
-
     lyr.CommitTransaction()
     conn = None
 
 
 def get_field_index(connection_string, layer_name, attr):
-    conn = ogr.Open(connection_string, 1)
+    '''returns field / attribute index for a given attribute name'''
+    conn = ogr.Open(connection_string)
     lyr = conn.GetLayer(layer_name)
     layer_defn = lyr.GetLayerDefn()
     for i in range(layer_defn.GetFieldCount()):
@@ -134,31 +133,48 @@ def collect_geometries(
 
 
 if __name__ == "__main__":
+    # Prepare connection string
     databaseServer = "localhost"
     databaseName = "te_data"
     databaseUser = "postgres"
     databasePW = "123456"
     connection_string = "PG: host=%s dbname=%s user=%s password=%s" % (
         databaseServer, databaseName, databaseUser, databasePW)
-    in_layers = [
-        'csv_test_12',
-        'cable_points10',
-        'banks',
-    ]
     # create the spatial reference, WGS84
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(4326)
-    # output geometry type
-    geom_type = ogr.wkbPoint
-    # Sample layers result to be sent to the end point
-    results_sample = [
-        {
-            'layer_name': 'layer',
-            'success': True,
-            'warnings': 'warning messages will set here',
-            'errors': 'errors will set here'
-        }
+    # Selected in layers to collect geometries from
+    in_layers = [
+        'csv_test_120',
+        'csv_test_122',
     ]
+    # TODO: Check if selected attrs are in every selected layer
+    # selected attrs to be imported in the out layer
+    attrs = [
+        'path',
+        'element_id',
+    ]
+    # Assume the above check is done
+    in_layer = in_layers[0]
+    # get attrs indices
+    attrs_indexes = [
+        get_field_index(attr=attr, layer_name=in_layer, connection_string=connection_string) 
+        for attr in attrs
+    ]
+    # get attrs types
+    attrs_types = [
+        get_field_type(
+            connection_string=connection_string,
+            layer_name=in_layer,
+            index=index
+        )
+        for index in attrs_indexes
+    ]
+    # output geometry type
+    # TODO: it has to be dynamic geom type
+    geom_type = ogr.wkbPoint
+    # create out layer if not layer exist
+    # TODO: Check if Layer is already exist
     out_layer_name = 'testing_merge_layers'
     layer_exist = layer_exist(connection_string, out_layer_name)
     out_layer_name = create_out_layer(
@@ -167,15 +183,29 @@ if __name__ == "__main__":
         geom_type=geom_type,
         srs=srs,
     )
-    create_field(connection_string, out_layer_name, 'layer_name', ogr.OFTString)
+    # Create default field named layer_name to act as a ref.
+    # TODO: Make it Optional
+    create_field(
+        connection_string, out_layer_name,
+        field_name='layer_name', field_type=ogr.OFTString)
+    # Create fields based on the selected fields
+    for field_name, field_type in attrs, attrs_types:
+        create_field(
+            connection_string, out_layer_name,
+            field_name=field_name, field_type=field_type)
     for layer in in_layers:
         if compare_geometry_type(
             connection_string=connection_string,
             in_layer_name=layer,
             out_layer_name=out_layer_name,
         ):
+            attrs_indexes = [
+                get_field_index(attr=attr, layer_name=layer, connection_string=connection_string) 
+                for attr in attrs
+            ]
             collect_geometries(
                 connection_string=connection_string,
                 out_layer_name=out_layer_name,
                 in_layer_name=layer,
+                attrs=attrs_indexes,
             )
