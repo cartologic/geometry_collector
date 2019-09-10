@@ -45,7 +45,7 @@ def compare_geometry_type(
     conn = ogr.Open(connection_string, 1)
     in_layer = conn.GetLayer(in_layer_name)
     out_layer = conn.GetLayer(out_layer_name)
-    same = in_layer.GetGeomType() == in_layer.GetGeomType()
+    same = in_layer.GetGeomType() == out_layer.GetGeomType()
     conn = None
     return same
 
