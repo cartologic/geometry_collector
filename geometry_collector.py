@@ -98,7 +98,8 @@ def collect_geometries(
 
     # Check the same projection
     same_projection = out_layer.GetSpatialRef().IsSame(in_layer.GetSpatialRef())
-    if(same_projection == 1):
+    same_GeogCS = out_layer.GetSpatialRef().IsSameGeogCS(in_layer.GetSpatialRef())
+    if(same_projection == 1) or (same_GeogCS == 1):
         # Better use GetNextFeature than feature in layer, memory efficient
         in_feature = in_layer.GetNextFeature()
         while in_feature:
