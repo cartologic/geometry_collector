@@ -78,6 +78,14 @@ def get_field_index(connection_string, layer_name, attr):
             return i
 
 
+def get_field_type(connection_string, layer_name, index):
+    '''returns field / attribute type for a given attribute index'''
+    conn = ogr.Open(connection_string)
+    lyr = conn.GetLayer(layer_name)
+    layer_defn = lyr.GetLayerDefn()
+    return layer_defn.GetFieldDefn(index).GetType()
+
+
 def collect_geometries(
     connection_string,
     in_layer_name,
