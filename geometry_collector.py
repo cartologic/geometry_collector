@@ -93,42 +93,36 @@ def collect_geometries(
     # Start Connection with read & update mode
     conn = ogr.Open(connection_string, 1)
     in_layer = conn.GetLayer(in_layer_name)
+    inSpatialRef = in_layer.GetSpatialRef()
     out_layer = conn.GetLayer(out_layer_name)
+    outSpatialRef = out_layer.GetSpatialRef()
     out_featureDefn = out_layer.GetLayerDefn()
-
+    # Create coordination transform object
+    coordTrans = osr.CoordinateTransformation(inSpatialRef, outSpatialRef)
     # Check the same projection
-    same_projection = out_layer.GetSpatialRef().IsSame(in_layer.GetSpatialRef())
-    same_GeogCS = out_layer.GetSpatialRef().IsSameGeogCS(in_layer.GetSpatialRef())
-    if(same_projection == 1) or (same_GeogCS == 1):
-        # Better use GetNextFeature than feature in layer, memory efficient
-        in_feature = in_layer.GetNextFeature()
-        while in_feature:
-            # get feature geom_wkt
-            geom = in_feature.GetGeometryRef()
-            geom_wkt = geom.Centroid().ExportToWkt()
-            # create point geometry from in feature wkt
-            point = ogr.CreateGeometryFromWkt(geom_wkt)
-            # Create out feature
-            out_feature = ogr.Feature(out_featureDefn)
-            out_feature.SetGeometry(point)
-
-            # TODO: Set fields from fields input
-            # TODO: Make sure the field is exist
-            # Set layer_name field
-            out_feature.SetField('layer_name', in_layer_name)
-
-            # Start transactions with database
-            out_layer.StartTransaction()
-            out_layer.CreateFeature(out_feature)
-            out_layer.CommitTransaction()
-            in_feature = None
-            in_feature = in_layer.GetNextFeature()
+    same_projection = outSpatialRef.IsSame(inSpatialRef)
+    in_feature = in_layer.GetNextFeature()
+    while in_feature:
+        # Re-project if needed
+        if same_projection:
+            geom_ref = in_feature.GetGeometryRef()
         else:
-            # TODO
-            # re-project every feature
-            # then append to out_layer
-            pass
-
+            geom_ref = in_feature.GetGeometryRef()
+            geom_ref.Transform(coordTrans)
+        geom_wkt = geom_ref.Centroid().ExportToWkt()
+        # create point geometry from in feature wkt
+        geom = ogr.CreateGeometryFromWkt(geom_wkt)
+        # Create out feature
+        out_feature = ogr.Feature(out_featureDefn)
+        out_feature.SetGeometry(geom)
+        # set fields
+        out_feature.SetField('layer_name', in_layer_name)
+        # Start transactions with database
+        out_layer.StartTransaction()
+        out_layer.CreateFeature(out_feature)
+        out_layer.CommitTransaction()
+        in_feature = None
+        in_feature = in_layer.GetNextFeature()
     # Close Connection
     conn = None
 
@@ -190,10 +184,10 @@ if __name__ == "__main__":
         connection_string, out_layer_name,
         field_name='layer_name', field_type=ogr.OFTString)
     # Create fields based on the selected fields
-    for field_name, field_type in attrs, attrs_types:
-        create_field(
-            connection_string, out_layer_name,
-            field_name=field_name, field_type=field_type)
+    # for field_name, field_type in attrs, attrs_types:
+    #     create_field(
+    #         connection_string, out_layer_name,
+    #         field_name=field_name, field_type=field_type)
     for layer in in_layers:
         if compare_geometry_type(
             connection_string=connection_string,
@@ -208,5 +202,5 @@ if __name__ == "__main__":
                 connection_string=connection_string,
                 out_layer_name=out_layer_name,
                 in_layer_name=layer,
-                attrs=attrs_indexes,
+                # attrs=attrs_indexes,
             )
