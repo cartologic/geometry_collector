@@ -89,10 +89,12 @@ def collect_geometries(
     connection_string,
     in_layer_name,
     out_layer_name,
+    attrs_indexes,
 ):
     # Start Connection with read & update mode
     conn = ogr.Open(connection_string, 1)
     in_layer = conn.GetLayer(in_layer_name)
+    in_layer_defn = in_layer.GetLayerDefn()
     inSpatialRef = in_layer.GetSpatialRef()
     out_layer = conn.GetLayer(out_layer_name)
     outSpatialRef = out_layer.GetSpatialRef()
@@ -117,6 +119,13 @@ def collect_geometries(
         out_feature.SetGeometry(geom)
         # set fields
         out_feature.SetField('layer_name', in_layer_name)
+        for i in attrs_indexes:
+            out_feature.SetField(
+                # Field Name
+                in_layer_defn.GetFieldDefn(i).GetName(),
+                # Current feature field value
+                in_feature[i]
+            )
         # Start transactions with database
         out_layer.StartTransaction()
         out_layer.CreateFeature(out_feature)
@@ -184,16 +193,17 @@ if __name__ == "__main__":
         connection_string, out_layer_name,
         field_name='layer_name', field_type=ogr.OFTString)
     # Create fields based on the selected fields
-    # for field_name, field_type in attrs, attrs_types:
-    #     create_field(
-    #         connection_string, out_layer_name,
-    #         field_name=field_name, field_type=field_type)
+    for field_name, field_type in zip(attrs, attrs_types):
+        create_field(
+            connection_string, out_layer_name,
+            field_name=field_name, field_type=field_type)
     for layer in in_layers:
         if compare_geometry_type(
             connection_string=connection_string,
             in_layer_name=layer,
             out_layer_name=out_layer_name,
         ):
+            # Current layer attrs indexes
             attrs_indexes = [
                 get_field_index(attr=attr, layer_name=layer, connection_string=connection_string) 
                 for attr in attrs
@@ -202,5 +212,5 @@ if __name__ == "__main__":
                 connection_string=connection_string,
                 out_layer_name=out_layer_name,
                 in_layer_name=layer,
-                # attrs=attrs_indexes,
+                attrs_indexes=attrs_indexes,
             )
