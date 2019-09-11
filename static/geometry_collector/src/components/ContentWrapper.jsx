@@ -6,6 +6,7 @@ import ResourceSelectDialog from './ResourceSelectDialog'
 import ResultsDialog from './ResultsDialog'
 import OutLayersDialog from './OutLayersDialog'
 import RS from "./MResourceSelect";
+import AS from "./AttributesSelector";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Container from '@material-ui/core/Container';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -25,7 +26,9 @@ const useStyles = makeStyles(theme => ({
 export default (props) => {
   const classes = useStyles();
   const {
-    loading
+    loading,
+    mSelect,
+    attributeSelector,
   } = props
   return (
     <div>
@@ -36,7 +39,8 @@ export default (props) => {
             loading &&
             <LinearProgress className={classes.progress}/>
           }
-          <RS {...props.mSelect}/>
+          <RS {...mSelect}/>
+          <AS {...attributeSelector}/>
         </Paper>
       </Container>
     </div>

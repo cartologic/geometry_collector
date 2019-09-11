@@ -98,7 +98,7 @@ export default (props) => {
     return (
         <div>
             <Typography variant="h6" className={classes.title}>
-                Select Layers
+                1. Select Layers
             </Typography>
             <SelectComponent
                 resources={resources}

@@ -34,6 +34,9 @@ export default class App extends Component {
             mSelect: {
                 resources: [],
             },
+            attributeSelector: {
+                attributes: [],
+            },
         }
         // globalURLS are predefined in index.html otherwise use the following defaults
         this.urls = globalURLS
@@ -48,6 +51,7 @@ export default class App extends Component {
         this.getLayerAttributes = this.getLayerAttributes.bind(this)
         this.publishChange = this.publishChange.bind(this)
         this.onOutLayerCheck = this.onOutLayerCheck.bind(this)
+        this.onAttrSelect = this.onAttrSelect.bind(this)
         this.apply = this.apply.bind(this)
     }
     resourceSelectDialogClose() {
@@ -137,27 +141,48 @@ export default class App extends Component {
             }
         })
     }
-    async getLayerAttributes() {
-        const layer = this.state.publishForm.selectedResource
-        const params = {
-            'layer__id': layer.id
-        }
-        const url = UrlAssembler(this.urls.attributesAPI).query(params).toString()
-        const response = await fetch(url, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                "X-CSRFToken": getCRSFToken(),
+    onAttrSelect(attr) {
+        const attrs = [...this.state.attributeSelector.attributes].map(
+            r => {
+                if(r.id === attr.id)
+                    return {...r, selected:!r.selected}
+                else 
+                    return(r)
             }
-        });
-        const data = await response.json();
+        )
         this.setState({
-            publishForm: {
-                ...this.state.publishForm,
-                attributes: data.objects,
-            },
-            loading: false
-        });
+            attributeSelector:{
+                ...this.state.attributeSelector,
+                attributes: attrs
+            }
+        })
+    }
+    async getLayerAttributes() {
+        this.setState({
+            loading: true
+        })
+        if (this.state.mSelect.resources.length > 0) {
+            const layer = this.state.mSelect.resources[0]
+            const params = {
+                'layer__id': layer.id
+            }
+            const url = UrlAssembler(this.urls.attributesAPI).query(params).toString()
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    "X-CSRFToken": getCRSFToken(),
+                }
+            });
+            const data = await response.json();
+            this.setState({
+                attributeSelector: {
+                    ...this.state.attributeSelector,
+                    attributes: data.objects.map(a=>{return {...a, selected: false}}),
+                },
+                loading: false
+            });
+        }
     }
     publishChange(e) {
         if (e.target.name === "groupByValue" && e.target.value !== this.state.publishForm["groupByValue"]) {
@@ -435,6 +460,11 @@ export default class App extends Component {
             mSelect: {
                 ...this.state.mSelect,
                 onResourceSelect: this.onResourceSelect,
+            },
+            attributeSelector: {
+                ...this.state.attributeSelector,
+                getLayerAttributes: this.getLayerAttributes,
+                onAttrSelect: this.onAttrSelect,
             },
         }
         return (

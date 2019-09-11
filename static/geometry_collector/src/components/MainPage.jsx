@@ -4,7 +4,8 @@ import ContentWrapper from '../components/ContentWrapper'
 import { makeStyles } from '@material-ui/core/styles';
 const useStyles = makeStyles(theme => ({
     root: {
-      height: '100vh',
+      minHeight: '100vh',
+      paddingBottom: '50px',
       backgroundColor: '#e5e5e5',
     },
   }));
