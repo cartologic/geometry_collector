@@ -126,6 +126,13 @@ export default class App extends Component {
         )
     }
     onResourceSelect(resource) {
+        if(this.state.attributeSelector.attributes.length > 0)
+        this.setState({
+            attributeSelector:{
+                ...this.state.attributeSelector,
+                attributes: []
+            }
+        })
         const resources = [...this.state.mSelect.resources].map(
             r => {
                 if(r.id === resource.id)
@@ -158,10 +165,12 @@ export default class App extends Component {
         })
     }
     async getLayerAttributes() {
-        this.setState({
-            loading: true
-        })
-        if (this.state.mSelect.resources.length > 0) {
+        const selectedResources = this.state.mSelect.resources.filter(r=>r.selectedResource).length > 0
+        const attributes = this.state.attributeSelector.attributes.length == 0
+        if (selectedResources && attributes) {
+            this.setState({
+                loading: true
+            })
             const layer = this.state.mSelect.resources[0]
             const params = {
                 'layer__id': layer.id
