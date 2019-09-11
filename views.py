@@ -16,3 +16,9 @@ from . import APP_NAME
 def index(request):
     return render(request, template_name="%s/index.html" % APP_NAME,
                   context={'message': 'Hello from %s' % APP_NAME, 'app_name': APP_NAME})
+
+
+@login_required
+def check_attributes(request):
+    if request.method == 'POST':
+        selected_attrs = [str(f) for f in json.loads(request.POST['selected_attrs'])]
