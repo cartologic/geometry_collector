@@ -40,7 +40,7 @@ const useStyles = makeStyles(theme => ({
 const SelectComponent = (props) => {
     const {
         resources,
-        selectedResources
+        onResourceSelect,
     } = props
     const classes = useStyles()
     return (
@@ -48,8 +48,9 @@ const SelectComponent = (props) => {
             <List className={classes.listRoot}>
                 {
                     resources.map((resource) => {
+                        if(!resource.selectedResource)
                         return (
-                            <ListItem button key={resource.id}>
+                            <ListItem button key={resource.id} onClick={()=>{onResourceSelect(resource)}}>
                                 <ListItemAvatar>
                                     <Avatar>
                                         <ImageIcon />
@@ -67,8 +68,9 @@ const SelectComponent = (props) => {
             <List className={classes.listRoot}>
                 {
                     resources.map((resource) => {
+                        if(resource.selectedResource)
                         return (
-                            <ListItem button key={resource.id}>
+                            <ListItem button key={resource.id} onClick={()=>{onResourceSelect(resource)}}>
                                 <ListItemAvatar>
                                     <Avatar>
                                         <ImageIcon />
@@ -87,7 +89,7 @@ const SelectComponent = (props) => {
 export default (props) => {
     const {
         resources,
-        selectedResources
+        onResourceSelect
     } = props
     const classes = useStyles()
     return (
@@ -97,7 +99,7 @@ export default (props) => {
             </Typography>
             <SelectComponent
                 resources={resources}
-                selectedResources={selectedResources} />
+                onResourceSelect={onResourceSelect} />
         </div>
     )
 }

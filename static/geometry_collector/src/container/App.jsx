@@ -33,7 +33,6 @@ export default class App extends Component {
             },
             mSelect: {
                 resources: [],
-                selectedResources: [],
             },
         }
         // globalURLS are predefined in index.html otherwise use the following defaults
@@ -107,7 +106,8 @@ export default class App extends Component {
         this.setState({
             loading: false,
             mSelect: {
-                resources: data.objects,
+                ...this.state.mSelect,
+                resources: data.objects.map(r=>{return {...r, selectedResource:false}}),
             }
         });
     }
@@ -122,22 +122,20 @@ export default class App extends Component {
         )
     }
     onResourceSelect(resource) {
-        this.checkedLineFeatures = []
-        this.setState({
-            publishForm: {
-                ...this.state.publishForm,
-                selectedResource: resource
-            },
-            resourceSelectDialog: {
-                ...this.state.resourceSelectDialog,
-                open: false
-            },
-            loading: true
-        },
-            () => {
-                this.getLayerAttributes()
+        const resources = [...this.state.mSelect.resources].map(
+            r => {
+                if(r.id === resource.id)
+                    return {...r, selectedResource:!r.selectedResource}
+                else 
+                    return(r)
             }
         )
+        this.setState({
+            mSelect:{
+                ...this.state.mSelect,
+                resources
+            }
+        })
     }
     async getLayerAttributes() {
         const layer = this.state.publishForm.selectedResource
@@ -436,6 +434,7 @@ export default class App extends Component {
             },
             mSelect: {
                 ...this.state.mSelect,
+                onResourceSelect: this.onResourceSelect,
             },
         }
         return (
