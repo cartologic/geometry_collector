@@ -9,6 +9,8 @@ import ImageIcon from '@material-ui/icons/Layers';
 import Exchange from '@material-ui/icons/CompareArrows';
 import Typography from '@material-ui/core/Typography';
 import moment from 'moment'
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 const useStyles = makeStyles(theme => ({
     root: {
         display: 'flex',
@@ -18,7 +20,7 @@ const useStyles = makeStyles(theme => ({
         height: '300px',
         width: '100%',
         margin: '10px',
-        overflow: 'hidden',
+        overflow: 'overlay',
         border: '2px dashed lightgrey',
         borderRadius: '5px',
     },
@@ -32,7 +34,7 @@ const useStyles = makeStyles(theme => ({
         fontSize: '2.5rem',
         color: 'grey',
     },
-    title:{
+    title: {
         color: 'grey',
         marginLeft: '15px',
     }
@@ -48,17 +50,17 @@ const SelectComponent = (props) => {
             <List className={classes.listRoot}>
                 {
                     resources.map((resource) => {
-                        if(!resource.selectedResource)
-                        return (
-                            <ListItem button key={resource.id} onClick={()=>{onResourceSelect(resource)}}>
-                                <ListItemAvatar>
-                                    <Avatar>
-                                        <ImageIcon />
-                                    </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText primary={resource.title} secondary={moment(new Date(resource.date)).format('MMMM Do YYYY, h:mm:ss a')} />
-                            </ListItem>
-                        )
+                        if (!resource.selectedResource)
+                            return (
+                                <ListItem button key={resource.id} onClick={() => { onResourceSelect(resource) }}>
+                                    <ListItemAvatar>
+                                        <Avatar>
+                                            <ImageIcon />
+                                        </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText primary={resource.title} secondary={moment(new Date(resource.date)).format('MMMM Do YYYY, h:mm:ss a')} />
+                                </ListItem>
+                            )
                     })
                 }
             </List>
@@ -68,17 +70,18 @@ const SelectComponent = (props) => {
             <List className={classes.listRoot}>
                 {
                     resources.map((resource) => {
-                        if(resource.selectedResource)
-                        return (
-                            <ListItem button key={resource.id} onClick={()=>{onResourceSelect(resource)}}>
-                                <ListItemAvatar>
-                                    <Avatar>
-                                        <ImageIcon />
-                                    </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText primary={resource.title} secondary={moment(new Date(resource.date)).format('MMMM Do YYYY, h:mm:ss a')} />
-                            </ListItem>
-                        )
+                        if (resource.selectedResource)
+                            return (
+                                <ListItem button key={resource.id} onClick={() => { onResourceSelect(resource) }}>
+                                    <FormControlLabel control={<Checkbox checked={true} color={'primary'} />} />
+                                    <ListItemAvatar>
+                                        <Avatar>
+                                            <ImageIcon />
+                                        </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText primary={resource.title} secondary={moment(new Date(resource.date)).format('MMMM Do YYYY, h:mm:ss a')} />
+                                </ListItem>
+                            )
                     })
                 }
             </List>
