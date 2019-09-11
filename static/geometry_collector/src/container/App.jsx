@@ -30,7 +30,11 @@ export default class App extends Component {
                 open: false,
                 outLayers: [],
                 errors: undefined
-            }
+            },
+            mSelect: {
+                resources: [],
+                selectedResources: [],
+            },
         }
         // globalURLS are predefined in index.html otherwise use the following defaults
         this.urls = globalURLS
@@ -87,29 +91,25 @@ export default class App extends Component {
             }
         })
     }
-    fetchResources() {
+    async fetchResources() {
         const params = {
             'geom_type': 'point',
         }
         const url = UrlAssembler(this.urls.layersAPI).query(params).toString()
-        return fetch(url, {
+        const response = await fetch(url, {
             method: 'GET',
             credentials: 'include',
             headers: {
                 "X-CSRFToken": getCRSFToken(),
             }
-        }).then((response) => {
-            return response.json()
-        })
-            .then(data => {
-                this.setState({
-                    loading: false,
-                    resourceSelectDialog: {
-                        ...this.state.resourceSelectDialog,
-                        resources: data.objects
-                    }
-                })
-            })
+        });
+        const data = await response.json();
+        this.setState({
+            loading: false,
+            mSelect: {
+                resources: data.objects,
+            }
+        });
     }
     componentDidMount() {
         this.setState(
@@ -139,29 +139,27 @@ export default class App extends Component {
             }
         )
     }
-    getLayerAttributes() {
+    async getLayerAttributes() {
         const layer = this.state.publishForm.selectedResource
         const params = {
             'layer__id': layer.id
         }
         const url = UrlAssembler(this.urls.attributesAPI).query(params).toString()
-        return fetch(url, {
+        const response = await fetch(url, {
             method: 'GET',
             credentials: 'include',
             headers: {
                 "X-CSRFToken": getCRSFToken(),
             }
-        }).then((response) => {
-            return response.json()
-        }).then(data => {
-            this.setState({
-                publishForm: {
-                    ...this.state.publishForm,
-                    attributes: data.objects,
-                },
-                loading: false
-            })
-        })
+        });
+        const data = await response.json();
+        this.setState({
+            publishForm: {
+                ...this.state.publishForm,
+                attributes: data.objects,
+            },
+            loading: false
+        });
     }
     publishChange(e) {
         if (e.target.name === "groupByValue" && e.target.value !== this.state.publishForm["groupByValue"]) {
@@ -406,6 +404,7 @@ export default class App extends Component {
     render() {
         const props = {
             urls: this.urls,
+            loading: this.state.loading,
             resourceSelectProps: {
                 ...this.state.resourceSelectDialog,
                 handleClose: this.resourceSelectDialogClose,
@@ -434,7 +433,10 @@ export default class App extends Component {
                 groupByValue: this.state.publishForm.groupByValue,
                 handleClose: this.outLayersDialogClose,
                 onCheck: this.onOutLayerCheck
-            }
+            },
+            mSelect: {
+                ...this.state.mSelect,
+            },
         }
         return (
             <MainPage {...props} />
