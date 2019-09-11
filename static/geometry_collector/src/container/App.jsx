@@ -33,10 +33,15 @@ export default class App extends Component {
             },
             mSelect: {
                 resources: [],
+                errors: undefined,
             },
             attributeSelector: {
                 attributes: [],
             },
+            outputLayerInput:{
+                outLayerName: '',
+                errors: undefined,
+            }
         }
         // globalURLS are predefined in index.html otherwise use the following defaults
         this.urls = globalURLS
@@ -126,6 +131,7 @@ export default class App extends Component {
         )
     }
     onResourceSelect(resource) {
+        // Reset Attribute selector state
         if(this.state.attributeSelector.attributes.length > 0)
         this.setState({
             attributeSelector:{
@@ -144,7 +150,8 @@ export default class App extends Component {
         this.setState({
             mSelect:{
                 ...this.state.mSelect,
-                resources
+                resources,
+                errors: undefined,
             }
         })
     }
@@ -194,13 +201,11 @@ export default class App extends Component {
         }
     }
     publishChange(e) {
-        if (e.target.name === "groupByValue" && e.target.value !== this.state.publishForm["groupByValue"]) {
-            this.checkedLineFeatures = []
-        }
         this.setState({
-            publishForm: {
-                ...this.state.publishForm,
+            outputLayerInput: {
+                ...this.state.outputLayerInput,
                 [e.target.name]: e.target.value,
+                errors: undefined,
             }
         })
     }
@@ -212,19 +217,21 @@ export default class App extends Component {
             let re = /^[a-z0-9_]{1,63}$/
             return tableName && re.test(tableName)
         }
+        let validArrayLength = (arr) => arr.length > 0
         let formErrors = undefined
-        if (!emptyOrUndefined(form.inLayerName)) {
-            formErrors = {
-                ...formErrors,
-                inLayerName: true
-            }
-        }
         if (!validateTableName(form.outLayerName)) {
             formErrors = {
                 ...formErrors,
                 outLayerName: true
             }
         }
+        if(!validArrayLength(form.resources)){
+            formErrors = {
+                ...formErrors,
+                selectedResources: true,
+            }
+        }
+        console.log({form, formErrors})
         return formErrors
     }
     apply() {
@@ -342,86 +349,23 @@ export default class App extends Component {
                 })
         }
         const {
-            selectedResource,
-            sortByValue,
-            groupByValue,
             outLayerName,
         } = this.state.publishForm
-        const checkedLineFeatures = this.checkedLineFeatures
-        const inLayerName = selectedResource && selectedResource.name
-        const errors = this.validateFormData({
-            inLayerName,
-            outLayerName,
-            sortByValue,
-            groupByValue
-        })
+        const resources = this.state.mSelect.resources.filter(r=>r.selectedResource)
+        const errors = this.validateFormData({outLayerName, resources})
         if (errors) {
             this.setState({
-                publishForm: {
-                    ...this.state.publishForm,
+                outputLayerInput: {
+                    ...this.state.outputLayerInput,
+                    errors,
+                },
+                mSelect: {
+                    ...this.state.mSelect,
                     errors,
                 }
             })
         } else {
-            if (groupByValue.length == 0) {
-                // get single line feature from all points in the selected point layer
-                // submit without checkedLineFeatures
-                this.setState({
-                    publishForm: {
-                        ...this.state.publishForm,
-                        errors: {},
-                    },
-                    loading: true
-                },
-                    () => {
-                        submit({
-                            inLayerName,
-                            outLayerName,
-                            sortByValue,
-                            groupByValue
-                        })
-                    }
-                )
-            }
-
-            if (groupByValue.length > 0 && checkedLineFeatures.length == 0) {
-                this.setState({
-                    publishForm: {
-                        ...this.state.publishForm,
-                        errors: {},
-                    },
-                    loading: true
-                },
-                    () => {
-                        getLineFeatures({
-                            inLayerName,
-                            outLayerName,
-                            sortByValue,
-                            groupByValue
-                        })
-                    }
-                )
-            }
-            if (groupByValue.length > 0 && checkedLineFeatures.length > 0) {
-                // submit with list of selected line features
-                this.setState({
-                    publishForm: {
-                        ...this.state.publishForm,
-                        errors: {},
-                    },
-                    loading: true
-                },
-                    () => {
-                        submit({
-                            inLayerName,
-                            outLayerName,
-                            sortByValue,
-                            groupByValue,
-                            checkedLineFeatures
-                        })
-                    }
-                )
-            }
+            console.log()
         }
     }
     onOutLayerCheck(e) {
@@ -475,6 +419,12 @@ export default class App extends Component {
                 getLayerAttributes: this.getLayerAttributes,
                 onAttrSelect: this.onAttrSelect,
             },
+            outputLayerInput:{
+                ...this.state.outputLayerInput,
+                outLayerNameChange: this.publishChange,
+                onApply: this.apply,
+                loading: this.state.loading
+            }
         }
         return (
             <MainPage {...props} />

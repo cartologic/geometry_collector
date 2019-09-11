@@ -24,6 +24,14 @@ const useStyles = makeStyles(theme => ({
         border: '2px dashed lightgrey',
         borderRadius: '5px',
     },
+    listRootError: {
+        height: '300px',
+        width: '100%',
+        margin: '10px',
+        overflow: 'overlay',
+        border: '2px dashed red',
+        borderRadius: '5px',
+    },
     exchange: {
         display: 'flex',
         flexDirection: 'column',
@@ -43,7 +51,9 @@ const SelectComponent = (props) => {
     const {
         resources,
         onResourceSelect,
+        errors,
     } = props
+    console.log({errors})
     const classes = useStyles()
     return (
         <div className={classes.root}>
@@ -67,7 +77,7 @@ const SelectComponent = (props) => {
             <div className={classes.exchange}>
                 <Exchange className={classes.exchangeIcon} />
             </div>
-            <List className={classes.listRoot}>
+            <List className={(errors && errors.selectedResources) ? classes.listRootError : classes.listRoot}>
                 {
                     resources.map((resource) => {
                         if (resource.selectedResource)
@@ -92,7 +102,8 @@ const SelectComponent = (props) => {
 export default (props) => {
     const {
         resources,
-        onResourceSelect
+        onResourceSelect,
+        errors,
     } = props
     const classes = useStyles()
     return (
@@ -102,7 +113,8 @@ export default (props) => {
             </Typography>
             <SelectComponent
                 resources={resources}
-                onResourceSelect={onResourceSelect} />
+                onResourceSelect={onResourceSelect} 
+                errors={errors} />
         </div>
     )
 }

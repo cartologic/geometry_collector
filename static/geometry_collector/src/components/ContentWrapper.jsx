@@ -7,6 +7,7 @@ import ResultsDialog from './ResultsDialog'
 import OutLayersDialog from './OutLayersDialog'
 import RS from "./MResourceSelect";
 import AS from "./AttributesSelector";
+import OLI from "./OutLayerInput";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Container from '@material-ui/core/Container';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -29,6 +30,7 @@ export default (props) => {
     loading,
     mSelect,
     attributeSelector,
+    outputLayerInput,
   } = props
   return (
     <div>
@@ -41,6 +43,7 @@ export default (props) => {
           }
           <RS {...mSelect}/>
           <AS {...attributeSelector}/>
+          <OLI {...outputLayerInput}/>
         </Paper>
       </Container>
     </div>
