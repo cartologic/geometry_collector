@@ -31,6 +31,7 @@ export default (props) => {
     mSelect,
     attributeSelector,
     outputLayerInput,
+    resultsDialog,
   } = props
   return (
     <div>
@@ -44,6 +45,7 @@ export default (props) => {
           <RS {...mSelect}/>
           <AS {...attributeSelector}/>
           <OLI {...outputLayerInput}/>
+          <ResultsDialog {...resultsDialog}/>
         </Paper>
       </Container>
     </div>

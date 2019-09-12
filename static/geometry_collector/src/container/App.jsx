@@ -172,13 +172,13 @@ export default class App extends Component {
         })
     }
     async getLayerAttributes() {
-        const selectedResources = this.state.mSelect.resources.filter(r => r.selectedResource).length > 0
+        const selectedResources = this.state.mSelect.resources.filter(r => r.selectedResource)
         const attributes = this.state.attributeSelector.attributes.length == 0
-        if (selectedResources && attributes) {
+        if (selectedResources.length > 0 && attributes) {
             this.setState({
                 loading: true
             })
-            const layer = this.state.mSelect.resources[0]
+            const layer = selectedResources[0]
             const params = {
                 'layer__id': layer.id
             }
@@ -304,7 +304,8 @@ export default class App extends Component {
                 credentials: 'same-origin',
             })
                 .then(res => {
-                    console.log({res})
+                    if(res.status == 200) handleSuccess(res)
+                    if(res.status == 500) handleFailure(res)
                 })
         }
         const getLineFeatures = ({
