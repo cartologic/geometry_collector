@@ -53,7 +53,6 @@ const SelectComponent = (props) => {
         onResourceSelect,
         errors,
     } = props
-    console.log({errors})
     const classes = useStyles()
     return (
         <div className={classes.root}>

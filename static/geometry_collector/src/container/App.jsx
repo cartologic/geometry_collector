@@ -217,7 +217,7 @@ export default class App extends Component {
             let re = /^[a-z0-9_]{1,63}$/
             return tableName && re.test(tableName)
         }
-        let validArrayLength = (arr) => arr.length > 0
+        let validArrayLength = arr => arr.length > 0
         let formErrors = undefined
         if (!validateTableName(form.outLayerName)) {
             formErrors = {
@@ -231,7 +231,6 @@ export default class App extends Component {
                 selectedResources: true,
             }
         }
-        console.log({form, formErrors})
         return formErrors
     }
     apply() {
@@ -348,11 +347,29 @@ export default class App extends Component {
                     }
                 })
         }
+        const checkAttrs = ({
+            layers,
+            attrs,
+        }) => {
+            let form = new FormData()
+            form.append('selected_attrs', JSON.stringify(attrs))
+            form.append('selected_layers', JSON.stringify(layers))
+            form.append('csrfmiddlewaretoken', getCRSFToken())
+            fetch(this.urls.check_attributes, {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin',
+            })
+            .then(res=>{
+                console.log({res})
+            })
+        }
         const {
             outLayerName,
-        } = this.state.publishForm
-        const resources = this.state.mSelect.resources.filter(r=>r.selectedResource)
-        const errors = this.validateFormData({outLayerName, resources})
+        } = this.state.outputLayerInput
+        const layers = this.state.mSelect.resources.filter(r=>r.selectedResource).map(r=>r.name)
+        const attrs = this.state.attributeSelector.attributes.filter(a=>a.selected).map(a=>a.attribute)
+        const errors = this.validateFormData({outLayerName, resources:layers})
         if (errors) {
             this.setState({
                 outputLayerInput: {
@@ -365,7 +382,7 @@ export default class App extends Component {
                 }
             })
         } else {
-            console.log()
+            checkAttrs({layers, attrs})
         }
     }
     onOutLayerCheck(e) {
