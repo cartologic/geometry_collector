@@ -11,6 +11,7 @@
 <div id='root'></div>
 <script>
     const globalURLS = {
+        generate: "{% url 'geometry_collector.generate' %}",
         check_attributes: "{% url 'geometry_collector.check_attributes' %}",
         layerUpload:"{% url 'layer_upload' %}",
         baseURL: "{% url 'home' %}",
