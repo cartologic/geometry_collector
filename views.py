@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 
 from . import APP_NAME
-from .geometry_collector import check_attrs, execute
+from .geometry_collector import check_attrs, delete_layer, execute
 from .publishers import publish_in_geonode, publish_in_geoserver
 from .utils import create_connection_string, table_exist
 
@@ -68,12 +68,14 @@ def generate(request):
             ogr_error = 'Error while creating out Layer: {}'.format(e)
             json_response = {"status": False,
                                 "message": "Error While Creating Out Layer In The Database! Try again or contact the administrator \n\n ogr_error:{}".format(ogr_error), }
+            delete_layer(out_layer_name)            
             return JsonResponse(json_response, status=500)
         # 4. Create GeoServer
         try:
             publish_in_geoserver(out_layer_name)
         except:
             # TODO: roll back the database table here!
+            delete_layer(out_layer_name)
             json_response = {
                 "status": False, "message": "Could not publish to GeoServer, Try again or contact the administrator", 'warnings': warnings}
             return JsonResponse(json_response, status=500)

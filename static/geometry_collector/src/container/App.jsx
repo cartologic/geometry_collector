@@ -80,6 +80,7 @@ export default class App extends Component {
         this.setState({
             resultsDialog: {
                 ...this.state.resultsDialog,
+                layersAttrsErrors: undefined,
                 open: false
             }
         })

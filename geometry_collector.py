@@ -55,6 +55,14 @@ def create_out_layer(
     return out_layer_name
 
 
+def delete_layer(connection_string, layer,):
+    ''' Deletes a layer in postgreSQL database'''
+    conn = ogr.Open(connection_string)
+    conn.DeleteLayer(layer)
+    # Close Connection
+    conn = None
+
+
 def compare_geometry_type(
     connection_string,
     in_layer_name,
