@@ -30,6 +30,7 @@ export default (props) => {
     warnings,
     success,
     layerURL,
+    layersAttrsErrors
   } = props
   const classes = useStyles()
   return (
@@ -48,6 +49,13 @@ export default (props) => {
             <Typography gutterBottom color={'error'}>
               {errors}
             </Typography>
+          }
+          {
+           layersAttrsErrors && Object.keys(layersAttrsErrors).map(e=>(
+            <Typography gutterBottom>
+              {`The layer ${e} doesn't contain ${layersAttrsErrors[e].map(a=>a+' ')}`}
+            </Typography>
+           )) 
           }
           {
             success &&

@@ -24,7 +24,8 @@ export default class App extends Component {
                 open: false,
                 errors: undefined,
                 success: undefined,
-                layerName: undefined
+                layerName: undefined,
+                layersAttrsErrors: undefined,
             },
             outLayersDialog: {
                 open: false,
@@ -243,6 +244,7 @@ export default class App extends Component {
                         open: true,
                         errors: jsonResponse.message,
                         success: undefined,
+                        layersAttrsErrors: jsonResponse.result
                     }
                 })
             })
@@ -368,6 +370,7 @@ export default class App extends Component {
                 }
             })
         } else {
+            this.setState({loading:true})
             checkAttrs({ layers, attrs })
                 .then(
                     res => {
@@ -376,7 +379,7 @@ export default class App extends Component {
                             attrs,
                             outLayerName,
                         })
-                        else console.error('Check attributes failed')
+                        if (res.status == 500) handleFailure(res)
                     }
                 )
         }
