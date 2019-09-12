@@ -38,7 +38,7 @@ export default class App extends Component {
             attributeSelector: {
                 attributes: [],
             },
-            outputLayerInput:{
+            outputLayerInput: {
                 outLayerName: '',
                 errors: undefined,
             }
@@ -116,7 +116,7 @@ export default class App extends Component {
             loading: false,
             mSelect: {
                 ...this.state.mSelect,
-                resources: data.objects.map(r=>{return {...r, selectedResource:false}}),
+                resources: data.objects.map(r => { return { ...r, selectedResource: false } }),
             }
         });
     }
@@ -132,23 +132,23 @@ export default class App extends Component {
     }
     onResourceSelect(resource) {
         // Reset Attribute selector state
-        if(this.state.attributeSelector.attributes.length > 0)
-        this.setState({
-            attributeSelector:{
-                ...this.state.attributeSelector,
-                attributes: []
-            }
-        })
+        if (this.state.attributeSelector.attributes.length > 0)
+            this.setState({
+                attributeSelector: {
+                    ...this.state.attributeSelector,
+                    attributes: []
+                }
+            })
         const resources = [...this.state.mSelect.resources].map(
             r => {
-                if(r.id === resource.id)
-                    return {...r, selectedResource:!r.selectedResource}
-                else 
-                    return(r)
+                if (r.id === resource.id)
+                    return { ...r, selectedResource: !r.selectedResource }
+                else
+                    return (r)
             }
         )
         this.setState({
-            mSelect:{
+            mSelect: {
                 ...this.state.mSelect,
                 resources,
                 errors: undefined,
@@ -158,21 +158,21 @@ export default class App extends Component {
     onAttrSelect(attr) {
         const attrs = [...this.state.attributeSelector.attributes].map(
             r => {
-                if(r.id === attr.id)
-                    return {...r, selected:!r.selected}
-                else 
-                    return(r)
+                if (r.id === attr.id)
+                    return { ...r, selected: !r.selected }
+                else
+                    return (r)
             }
         )
         this.setState({
-            attributeSelector:{
+            attributeSelector: {
                 ...this.state.attributeSelector,
                 attributes: attrs
             }
         })
     }
     async getLayerAttributes() {
-        const selectedResources = this.state.mSelect.resources.filter(r=>r.selectedResource).length > 0
+        const selectedResources = this.state.mSelect.resources.filter(r => r.selectedResource).length > 0
         const attributes = this.state.attributeSelector.attributes.length == 0
         if (selectedResources && attributes) {
             this.setState({
@@ -194,7 +194,7 @@ export default class App extends Component {
             this.setState({
                 attributeSelector: {
                     ...this.state.attributeSelector,
-                    attributes: data.objects.map(a=>{return {...a, selected: false}}),
+                    attributes: data.objects.map(a => { return { ...a, selected: false } }),
                 },
                 loading: false
             });
@@ -225,7 +225,7 @@ export default class App extends Component {
                 outLayerName: true
             }
         }
-        if(!validArrayLength(form.resources)){
+        if (!validArrayLength(form.resources)) {
             formErrors = {
                 ...formErrors,
                 selectedResources: true,
@@ -289,34 +289,22 @@ export default class App extends Component {
             })
         }
         const submit = ({
-            inLayerName,
+            layers,
+            attrs,
             outLayerName,
-            sortByValue,
-            groupByValue,
-            checkedLineFeatures
         }) => {
             let form = new FormData();
-            form.append('in_layer_name', inLayerName)
-            if (sortByValue && sortByValue.length > 0)
-                form.append('sort_by_attr', sortByValue)
-            if (groupByValue && groupByValue.length > 0)
-                form.append('group_by_attr', groupByValue)
-            if (checkedLineFeatures && checkedLineFeatures.length > 0)
-                form.append('line_features', JSON.stringify(checkedLineFeatures))
+            form.append('selected_attrs', JSON.stringify(attrs))
+            form.append('selected_layers', JSON.stringify(layers))
             form.append('out_layer_name', outLayerName)
             form.append('csrfmiddlewaretoken', getCRSFToken())
-            fetch(this.urls.generateLineLayer, {
+            fetch(this.urls.generate, {
                 method: 'POST',
                 body: form,
                 credentials: 'same-origin',
             })
                 .then(res => {
-                    if (res.status == 500) {
-                        handleFailure(res)
-                    }
-                    if (res.status == 200) {
-                        handleSuccess(res)
-                    }
+                    console.log({res})
                 })
         }
         const getLineFeatures = ({
@@ -355,21 +343,18 @@ export default class App extends Component {
             form.append('selected_attrs', JSON.stringify(attrs))
             form.append('selected_layers', JSON.stringify(layers))
             form.append('csrfmiddlewaretoken', getCRSFToken())
-            fetch(this.urls.check_attributes, {
+            return fetch(this.urls.check_attributes, {
                 method: 'POST',
                 body: form,
                 credentials: 'same-origin',
-            })
-            .then(res=>{
-                console.log({res})
             })
         }
         const {
             outLayerName,
         } = this.state.outputLayerInput
-        const layers = this.state.mSelect.resources.filter(r=>r.selectedResource).map(r=>r.name)
-        const attrs = this.state.attributeSelector.attributes.filter(a=>a.selected).map(a=>a.attribute)
-        const errors = this.validateFormData({outLayerName, resources:layers})
+        const layers = this.state.mSelect.resources.filter(r => r.selectedResource).map(r => r.name)
+        const attrs = this.state.attributeSelector.attributes.filter(a => a.selected).map(a => a.attribute)
+        const errors = this.validateFormData({ outLayerName, resources: layers })
         if (errors) {
             this.setState({
                 outputLayerInput: {
@@ -382,7 +367,17 @@ export default class App extends Component {
                 }
             })
         } else {
-            checkAttrs({layers, attrs})
+            checkAttrs({ layers, attrs })
+                .then(
+                    res => {
+                        if (res.status == 200) submit({
+                            layers,
+                            attrs,
+                            outLayerName,
+                        })
+                        else console.error('Check attributes failed')
+                    }
+                )
         }
     }
     onOutLayerCheck(e) {
@@ -436,7 +431,7 @@ export default class App extends Component {
                 getLayerAttributes: this.getLayerAttributes,
                 onAttrSelect: this.onAttrSelect,
             },
-            outputLayerInput:{
+            outputLayerInput: {
                 ...this.state.outputLayerInput,
                 outLayerNameChange: this.publishChange,
                 onApply: this.apply,
