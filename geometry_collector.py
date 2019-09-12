@@ -1,12 +1,5 @@
 from osgeo import ogr, osr
 
-# Solution Steps::
-# 1. get out layer from database, if not create it with defaults
-# 2. loop through the in layers and get their features
-# 3. re-project features if required
-# 4. append to the out layer, and commit transaction
-
-
 def layer_exist(
     connection_string,
     layer_name,
@@ -161,81 +154,65 @@ def collect_geometries(
     conn = None
 
 
-# if __name__ == "__main__":
-#     # Prepare connection string
-#     databaseServer = "localhost"
-#     databaseName = "te_data"
-#     databaseUser = "postgres"
-#     databasePW = "123456"
-#     connection_string = "PG: host=%s dbname=%s user=%s password=%s" % (
-#         databaseServer, databaseName, databaseUser, databasePW)
-#     # create the spatial reference, WGS84
-#     srs = osr.SpatialReference()
-#     srs.ImportFromEPSG(4326)
-#     # Selected in layers to collect geometries from
-#     in_layers = [
-#         'csv_test_120',
-#         'csv_test_122',
-#     ]
-#     # TODO: Check if selected attrs are in every selected layer
-#     # selected attrs to be imported in the out layer
-#     attrs = [
-#         'path',
-#         'element_id',
-#     ]
-#     # Assume the above check is done
-#     in_layer = in_layers[0]
-#     # get attrs indices
-#     attrs_indexes = [
-#         get_field_index(attr=attr, layer_name=in_layer, connection_string=connection_string) 
-#         for attr in attrs
-#     ]
-#     # get attrs types
-#     attrs_types = [
-#         get_field_type(
-#             connection_string=connection_string,
-#             layer_name=in_layer,
-#             index=index
-#         )
-#         for index in attrs_indexes
-#     ]
-#     # output geometry type
-#     # TODO: it has to be dynamic geom type
-#     geom_type = ogr.wkbPoint
-#     # create out layer if not layer exist
-#     # TODO: Check if Layer is already exist
-#     out_layer_name = 'testing_merge_layers'
-#     layer_exist = layer_exist(connection_string, out_layer_name)
-#     out_layer_name = create_out_layer(
-#         out_layer_name=out_layer_name,
-#         connection_string=connection_string,
-#         geom_type=geom_type,
-#         srs=srs,
-#     )
-#     # Create default field named layer_name to act as a ref.
-#     # TODO: Make it Optional
-#     create_field(
-#         connection_string, out_layer_name,
-#         field_name='layer_name', field_type=ogr.OFTString)
-#     # Create fields based on the selected fields
-#     for field_name, field_type in zip(attrs, attrs_types):
-#         create_field(
-#             connection_string, out_layer_name,
-#             field_name=field_name, field_type=field_type)
-#     for layer in in_layers:
-#         if compare_geometry_type(
-#             connection_string=connection_string,
-#             in_layer_name=layer,
-#             out_layer_name=out_layer_name,
-#         ):
-#             # Current layer attrs indexes
-#             attrs_indexes = [
-#                 get_field_index(attr=attr, layer_name=layer, connection_string=connection_string) 
-#                 for attr in attrs
-#             ]
-#             collect_geometries(
-#                 connection_string=connection_string,
-#                 out_layer_name=out_layer_name,
-#                 in_layer_name=layer,
-#                 attrs_indexes=attrs_indexes,
-#             )
+def execute(
+    connection_string,
+    in_layers,
+    out_layer_name,
+    attrs,
+):
+    # create the spatial reference, WGS84
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(4326)
+    # output geometry type
+    geom_type = ogr.wkbPoint
+    # Get basic info from the first layer (attrs_indices, attrs_types)
+    in_layer = in_layers[0]
+    # get attrs indices
+    attrs_indexes = [
+        get_field_index(attr=attr, layer_name=in_layer, connection_string=connection_string) 
+        for attr in attrs
+    ]
+    # get attrs types
+    attrs_types = [
+        get_field_type(
+            connection_string=connection_string,
+            layer_name=in_layer,
+            index=index
+        )
+        for index in attrs_indexes
+    ]
+    # create out layer
+    out_layer_name = create_out_layer(
+        out_layer_name=out_layer_name,
+        connection_string=connection_string,
+        geom_type=geom_type,
+        srs=srs,
+    )
+    # TODO: make it optional
+    # create default field based on layer name
+    create_field(
+        connection_string, out_layer_name,
+        field_name='layer_name', field_type=ogr.OFTString)
+    # Create fields based on the selected fields
+    for field_name, field_type in zip(attrs, attrs_types):
+        create_field(
+            connection_string, out_layer_name,
+            field_name=field_name, field_type=field_type)
+    # main logic
+    for layer in in_layers:
+        if compare_geometry_type(
+            connection_string=connection_string,
+            in_layer_name=layer,
+            out_layer_name=out_layer_name,
+        ):
+            # Current layer attrs indexes
+            attrs_indexes = [
+                get_field_index(attr=attr, layer_name=layer, connection_string=connection_string) 
+                for attr in attrs
+            ]
+            collect_geometries(
+                connection_string=connection_string,
+                out_layer_name=out_layer_name,
+                in_layer_name=layer,
+                attrs_indexes=attrs_indexes,
+            )
