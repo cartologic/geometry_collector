@@ -137,6 +137,12 @@ def collect_geometries(
         else:
             geom_ref = in_feature.GetGeometryRef()
             geom_ref.Transform(coordTrans)
+        # Skip if corrupted Feature!
+        # TODO: return the corrupted features and reason if possible!
+        if geom_ref is None: 
+            in_feature = None
+            in_feature = in_layer.GetNextFeature()
+            continue
         geom_wkt = geom_ref.Centroid().ExportToWkt()
         # create point geometry from in feature wkt
         geom = ogr.CreateGeometryFromWkt(geom_wkt)
