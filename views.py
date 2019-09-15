@@ -68,14 +68,14 @@ def generate(request):
             ogr_error = 'Error while creating out Layer: {}'.format(e)
             json_response = {"status": False,
                                 "message": "Error While Creating Out Layer In The Database! Try again or contact the administrator \n\n ogr_error:{}".format(ogr_error), }
-            delete_layer(out_layer_name)            
+            delete_layer(connection_string, out_layer_name)            
             return JsonResponse(json_response, status=500)
         # 4. Create GeoServer
         try:
             publish_in_geoserver(out_layer_name)
         except:
             # TODO: roll back the database table here!
-            delete_layer(out_layer_name)
+            delete_layer(connection_string, layer=out_layer_name)
             json_response = {
                 "status": False, "message": "Could not publish to GeoServer, Try again or contact the administrator", 'warnings': warnings}
             return JsonResponse(json_response, status=500)
@@ -85,6 +85,7 @@ def generate(request):
             layer = publish_in_geonode(out_layer_name, owner=request.user)
         except:
             # TODO: roll back the delete geoserver record and db name
+            delete_layer(connection_string, layer=out_layer_name)
             json_response = {
                 "status": False, "message": "Could not publish in GeoNode, Try again or contact the administrator", 'warnings': warnings}
             return JsonResponse(json_response, status=500)
