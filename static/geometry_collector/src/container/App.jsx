@@ -36,6 +36,7 @@ export default class App extends Component {
                 resources: [],
                 selectedResources: [],
                 errors: undefined,
+                searchValue: '',
             },
             attributeSelector: {
                 attributes: [],
@@ -54,6 +55,7 @@ export default class App extends Component {
         this.resultsDialogClose = this.resultsDialogClose.bind(this)
         this.outLayersDialogClose = this.outLayersDialogClose.bind(this)
         this.resultsDialogOpen = this.resultsDialogOpen.bind(this)
+        this.onSearchChange = this.onSearchChange.bind(this)
         this.onResourceSelect = this.onResourceSelect.bind(this)
         this.onResourceRemove = this.onResourceRemove.bind(this)
         this.getLayerAttributes = this.getLayerAttributes.bind(this)
@@ -106,6 +108,8 @@ export default class App extends Component {
     async fetchResources() {
         const params = {
             'geom_type': 'point',
+            'title__icontains': this.state.mSelect.searchValue,
+            'limit': '20',
         }
         const url = UrlAssembler(this.urls.layersAPI).query(params).toString()
         const response = await fetch(url, {
@@ -123,6 +127,14 @@ export default class App extends Component {
                 resources: data.objects.map(r => { return { ...r, selectedResource: false } }),
             }
         });
+    }
+    onSearchChange(e){
+        this.setState({
+            mSelect: {
+                ...this.state.mSelect,
+                searchValue: e.target.value,
+            }
+        }, this.fetchResources)
     }
     componentDidMount() {
         this.setState(
@@ -439,6 +451,7 @@ export default class App extends Component {
                 ...this.state.mSelect,
                 onResourceSelect: this.onResourceSelect,
                 onResourceRemove: this.onResourceRemove,
+                onSearchChange: this.onSearchChange,
             },
             attributeSelector: {
                 ...this.state.attributeSelector,

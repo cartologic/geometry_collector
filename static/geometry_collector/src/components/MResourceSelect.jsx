@@ -11,6 +11,8 @@ import Typography from '@material-ui/core/Typography';
 import moment from 'moment'
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import TextField from '@material-ui/core/TextField';
+
 const useStyles = makeStyles(theme => ({
     root: {
         display: 'flex',
@@ -45,6 +47,10 @@ const useStyles = makeStyles(theme => ({
     title: {
         color: 'grey',
         marginLeft: '15px',
+    },
+    textField: {
+        margin: '10px',
+        width: '98%',
     }
 }));
 const SelectComponent = (props) => {
@@ -105,6 +111,8 @@ export default (props) => {
         onResourceSelect,
         onResourceRemove,
         errors,
+        searchValue,
+        onSearchChange,
     } = props
     const classes = useStyles()
     return (
@@ -112,6 +120,15 @@ export default (props) => {
             <Typography variant="h6" className={classes.title}>
                 1. Select Layers
             </Typography>
+            <TextField
+                id="outlined-name"
+                label="Search Layers:"
+                className={classes.textField}
+                value={searchValue}
+                onChange={onSearchChange}
+                margin="normal"
+                variant="outlined"
+            />
             <SelectComponent
                 resources={resources}
                 selectedResources={selectedResources}
