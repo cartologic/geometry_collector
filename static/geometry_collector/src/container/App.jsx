@@ -34,6 +34,7 @@ export default class App extends Component {
             },
             mSelect: {
                 resources: [],
+                selectedResources: [],
                 errors: undefined,
             },
             attributeSelector: {
@@ -54,6 +55,7 @@ export default class App extends Component {
         this.outLayersDialogClose = this.outLayersDialogClose.bind(this)
         this.resultsDialogOpen = this.resultsDialogOpen.bind(this)
         this.onResourceSelect = this.onResourceSelect.bind(this)
+        this.onResourceRemove = this.onResourceRemove.bind(this)
         this.getLayerAttributes = this.getLayerAttributes.bind(this)
         this.publishChange = this.publishChange.bind(this)
         this.onOutLayerCheck = this.onOutLayerCheck.bind(this)
@@ -141,18 +143,24 @@ export default class App extends Component {
                     attributes: []
                 }
             })
-        const resources = [...this.state.mSelect.resources].map(
-            r => {
-                if (r.id === resource.id)
-                    return { ...r, selectedResource: !r.selectedResource }
-                else
-                    return (r)
-            }
-        )
+        const selectedResources = this.state.mSelect.selectedResources
+        if(selectedResources.indexOf(resource) === -1)
         this.setState({
             mSelect: {
                 ...this.state.mSelect,
-                resources,
+                selectedResources: [...selectedResources, resource],
+                errors: undefined,
+            }
+        })
+    }
+    onResourceRemove(resource){
+        const selectedResources = this.state.mSelect.selectedResources
+        const index = selectedResources.indexOf(resource)
+        selectedResources.splice(index, 1)
+        this.setState({
+            mSelect: {
+                ...this.state.mSelect,
+                selectedResources,
                 errors: undefined,
             }
         })
@@ -174,7 +182,7 @@ export default class App extends Component {
         })
     }
     async getLayerAttributes() {
-        const selectedResources = this.state.mSelect.resources.filter(r => r.selectedResource)
+        const selectedResources = this.state.mSelect.selectedResources
         const attributes = this.state.attributeSelector.attributes.length == 0
         if (selectedResources.length > 0 && attributes) {
             this.setState({
@@ -356,7 +364,7 @@ export default class App extends Component {
         const {
             outLayerName,
         } = this.state.outputLayerInput
-        const layers = this.state.mSelect.resources.filter(r => r.selectedResource).map(r => r.name)
+        const layers = this.state.mSelect.selectedResources.map(r => r.name)
         const attrs = this.state.attributeSelector.attributes.filter(a => a.selected).map(a => a.attribute)
         const errors = this.validateFormData({ outLayerName, resources: layers })
         if (errors) {
@@ -430,6 +438,7 @@ export default class App extends Component {
             mSelect: {
                 ...this.state.mSelect,
                 onResourceSelect: this.onResourceSelect,
+                onResourceRemove: this.onResourceRemove,
             },
             attributeSelector: {
                 ...this.state.attributeSelector,

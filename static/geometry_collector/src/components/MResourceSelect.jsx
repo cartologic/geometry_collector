@@ -50,7 +50,9 @@ const useStyles = makeStyles(theme => ({
 const SelectComponent = (props) => {
     const {
         resources,
+        selectedResources,
         onResourceSelect,
+        onResourceRemove,
         errors,
     } = props
     const classes = useStyles()
@@ -78,20 +80,18 @@ const SelectComponent = (props) => {
             </div>
             <List className={(errors && errors.selectedResources) ? classes.listRootError : classes.listRoot}>
                 {
-                    resources.map((resource) => {
-                        if (resource.selectedResource)
-                            return (
-                                <ListItem button key={resource.id} onClick={() => { onResourceSelect(resource) }}>
-                                    <FormControlLabel control={<Checkbox checked={true} color={'primary'} />} />
-                                    <ListItemAvatar>
-                                        <Avatar>
-                                            <ImageIcon />
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText primary={resource.title} secondary={moment(new Date(resource.date)).format('MMMM Do YYYY, h:mm:ss a')} />
-                                </ListItem>
-                            )
-                    })
+                    selectedResources.map((resource) => (
+                        <ListItem button key={resource.id} onClick={() => { onResourceRemove(resource) }}>
+                            <FormControlLabel control={<Checkbox checked={true} color={'primary'} />} />
+                            <ListItemAvatar>
+                                <Avatar>
+                                    <ImageIcon />
+                                </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText primary={resource.title} secondary={moment(new Date(resource.date)).format('MMMM Do YYYY, h:mm:ss a')} />
+                        </ListItem>
+                    )
+                    )
                 }
             </List>
         </div>
@@ -101,7 +101,9 @@ const SelectComponent = (props) => {
 export default (props) => {
     const {
         resources,
+        selectedResources,
         onResourceSelect,
+        onResourceRemove,
         errors,
     } = props
     const classes = useStyles()
@@ -112,7 +114,9 @@ export default (props) => {
             </Typography>
             <SelectComponent
                 resources={resources}
-                onResourceSelect={onResourceSelect} 
+                selectedResources={selectedResources}
+                onResourceSelect={onResourceSelect}
+                onResourceRemove={onResourceRemove}
                 errors={errors} />
         </div>
     )
