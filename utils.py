@@ -2,15 +2,16 @@
 
 import requests
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connections
+from geonode.geoserver.helpers import (get_store, ogc_server_settings)
+from geonode.geoserver.helpers import gs_catalog
+from geonode.layers.models import Layer
+from geonode.upload.utils import create_geoserver_db_featurestore
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from requests.packages.urllib3.util.retry import Retry
 from slugify import slugify
-
-from geonode.geoserver.helpers import (get_store, gs_catalog,
-                                       ogc_server_settings)
-from geonode.upload.utils import create_geoserver_db_featurestore
 
 DEFAULT_WORKSPACE = settings.DEFAULT_WORKSPACE
 
@@ -22,8 +23,23 @@ def table_exist(name):
         if c.alias == data_db_name:
             connection = c
     table_names = connection.introspection.table_names()
-    exist = name in table_names
-    return exist
+    db_exist = name in table_names
+    gs_exist = bool(gs_catalog.get_layer(name))
+    try:
+        Layer.objects.get(name=name)
+        gn_exist = True
+    except ObjectDoesNotExist:
+        gn_exist = False
+    layer_exist = db_exist or gs_exist or gn_exist
+    if layer_exist:
+        # TODO: using logger instead
+        print('Table name \'{}\' is already exist in {}, {}, {}'.format(
+            name,
+            'database' if db_exist else '',
+            'geoserver' if gs_exist else '',
+            'geonode' if gn_exist else '',
+        ))
+    return layer_exist
 
 
 def SLUGIFIER(text):
@@ -40,6 +56,7 @@ def get_db_settings():
         'port': settings.get('PORT', 5432),
     }
 
+
 def create_connection_string():
     settings = get_db_settings()
     databaseServer = settings['host']
@@ -47,7 +64,9 @@ def create_connection_string():
     databaseUser = settings['user']
     databasePW = settings['password']
     databasePort = settings['port']
-    return "PG: host=%s port=%s dbname=%s user=%s password=%s" % (databaseServer, databasePort, databaseName,databaseUser, databasePW)
+    return "PG: host=%s port=%s dbname=%s user=%s password=%s" % (
+    databaseServer, databasePort, databaseName, databaseUser, databasePW)
+
 
 def get_sld_body(url):
     req = requests.get(
