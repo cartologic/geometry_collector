@@ -257,6 +257,10 @@ export default class App extends Component {
     }
     apply() {
         const handleFailure = (res) => {
+            if (res.redirected) {
+                const regex = new RegExp('/account/login')
+                if (regex.test(res.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+            }
             res.json().then(jsonResponse => {
                 this.setState({
                     loading: false,
@@ -271,6 +275,10 @@ export default class App extends Component {
             })
         }
         const handleSuccess = (res) => {
+            if (res.redirected) {
+                const regex = new RegExp('/account/login')
+                if (regex.test(res.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+            }
             res.json().then(jsonResponse => {
                 this.setState({
                     loading: false,
@@ -285,6 +293,10 @@ export default class App extends Component {
             })
         }
         const lineLayersSuccess = (res) => {
+            if (res.redirected) {
+                const regex = new RegExp('/account/login')
+                if (regex.test(res.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+            }
             res.json().then(jsonResponse => {
                 this.setState({
                     loading: false,
@@ -299,6 +311,10 @@ export default class App extends Component {
             })
         }
         const lineLayersFailure = (res) => {
+            if (res.redirected) {
+                const regex = new RegExp('/account/login')
+                if (regex.test(res.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+            }
             res.json().then(jsonResponse => {
                 this.setState({
                     loading: false,
@@ -327,6 +343,10 @@ export default class App extends Component {
                 credentials: 'same-origin',
             })
                 .then(res => {
+                    if (res.redirected) {
+                        const regex = new RegExp('/account/login')
+                        if (regex.test(res.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+                    }
                     if(res.status == 200) handleSuccess(res)
                     if(res.status == 500) handleFailure(res)
                 })
@@ -351,6 +371,10 @@ export default class App extends Component {
                 credentials: 'same-origin',
             })
                 .then(res => {
+                    if (res.redirected) {
+                        const regex = new RegExp('/account/login')
+                        if (regex.test(res.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+                    }
                     if (res.status == 500) {
                         lineLayersFailure(res)
                     }
@@ -395,6 +419,10 @@ export default class App extends Component {
             checkAttrs({ layers, attrs })
                 .then(
                     res => {
+                        if (res.redirected) {
+                            const regex = new RegExp('/account/login')
+                            if (regex.test(res.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+                        }
                         if (res.status == 200) submit({
                             layers,
                             attrs,
