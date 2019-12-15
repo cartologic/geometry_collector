@@ -66,8 +66,8 @@ class GeoserverPublisher(object):
         s = requests.Session()
         s.auth = (self.username, self.password)
         s.headers = {'Content-Type': "application/json"}
-        s = requests_retry_session(session=s)
-        req = s.post(
+        s = requests_retry_session(session=s, raise_on_status=False)
+        gs_response = s.post(
             self.featureTypes_url,
             json={"featureType": {
                 # Layer name in geoserver [geonode:layer1]
@@ -75,12 +75,7 @@ class GeoserverPublisher(object):
                 # Table Name in DB
                 "nativeName": tablename
             }}, allow_redirects=True, verify=False)
-        logger.error("url: {}, status:{}".format(
-            self.featureTypes_url, req.status_code))
-        logger.error(req.text)
-        if req.status_code == 201:
-            return True
-        return False
+        return gs_response
 
     def delete_layer(self, layername):
         try:
@@ -243,17 +238,27 @@ class GeonodePublisher(object):
             exception_type, error, traceback = sys.exc_info()
         else:
             if layer:
-                #layer.set_default_permissions()
-                perms = {u'users': {u'AnonymousUser': [], self.owner: [u'view_resourcebase', u'download_resourcebase', u'change_resourcebase_metadata', u'change_layer_data', u'change_layer_style', u'change_resourcebase', u'delete_resourcebase', u'change_resourcebase_permissions', u'publish_resourcebase']}, u'groups': {}}
+                # layer.set_default_permissions()
+                perms = {u'users': {u'AnonymousUser': [], self.owner: [u'view_resourcebase', u'download_resourcebase',
+                                                                       u'change_resourcebase_metadata',
+                                                                       u'change_layer_data', u'change_layer_style',
+                                                                       u'change_resourcebase', u'delete_resourcebase',
+                                                                       u'change_resourcebase_permissions',
+                                                                       u'publish_resourcebase']}, u'groups': {}}
                 layer.set_permissions(perms)
             return layer
 
 
 def publish_in_geoserver(table_name):
     gs_publisher = GeoserverPublisher()
-    gs_publisher.publish_postgis_layer(table_name, table_name)
+    return gs_publisher.publish_postgis_layer(table_name, table_name)
 
 
 def publish_in_geonode(table_name, owner):
     gn_publisher = GeonodePublisher(owner=owner)
     return gn_publisher.publish(table_name)
+
+
+def cascade_delete_layer(layer_name):
+    gs_publisher = GeoserverPublisher()
+    return gs_publisher.delete_layer(layer_name)
