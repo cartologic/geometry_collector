@@ -1,18 +1,15 @@
-import os
-import re
-import uuid
 import json
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.forms import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import render
+from geonode.layers.models import Layer
 
 from . import APP_NAME
 from .geometry_collector import check_attrs, delete_layer, execute
-from .publishers import publish_in_geonode, publish_in_geoserver
+from .publishers import publish_in_geonode, publish_in_geoserver, cascade_delete_layer
 from .utils import create_connection_string, table_exist
+
 
 @login_required
 def index(request):
@@ -52,9 +49,9 @@ def generate(request):
         # 2. Check table exist
         if table_exist(out_layer_name):
             json_response = {"status": False,
-                                "message": "Layer Already Exists!, Try again with different layer name, If you don't see the existing layer in the layer list, Please contact the administrator", }
+                             "message": "Layer Already Exists!, Try again with different layer name, If you don't see the existing layer in the layer list, Please contact the administrator", }
             return JsonResponse(json_response, status=500)
-        # 3. Start Generating layer
+        # 3. Start Generating layer using gdal
         connection_string = create_connection_string()
         try:
             execute(
@@ -66,34 +63,48 @@ def generate(request):
         except Exception as e:
             # TODO: roll back delete layer(table) from database if created!
             ogr_error = 'Error while creating out Layer: {}'.format(e)
-            json_response = {"status": False,
-                                "message": "Error While Creating Out Layer In The Database! Try again or contact the administrator \n\n ogr_error:{}".format(ogr_error), }
-            delete_layer(connection_string, out_layer_name)            
+            json_response = {
+                "status": False,
+                "message": "Error while creating layer in database! Try again or contact the administrator, ogr_error:{}".format(ogr_error),
+            }
+            delete_layer(connection_string, out_layer_name)
             return JsonResponse(json_response, status=500)
         # 4. Create GeoServer
-        try:
-            publish_in_geoserver(out_layer_name)
-        except:
-            # TODO: roll back the database table here!
-            delete_layer(connection_string, layer=out_layer_name)
+        gs_response = publish_in_geoserver(out_layer_name)
+        if gs_response.status_code != 201:
+            if gs_response.status_code == 500:
+                # status code 500:
+                # layer exist in geoserver datastore and does not exist in database
+                # hence the database check is done in step 2
+                # cascade delete is a method deletes layer from geoserver and database
+                cascade_delete_layer(str(out_layer_name))
+            # delete layer from database as well
+            delete_layer(connection_string, str(out_layer_name))
             json_response = {
-                "status": False, "message": "Could not publish to GeoServer, Try again or contact the administrator", 'warnings': warnings}
+                "status": False, "message": "Could not publish to GeoServer, Error Response Code:{}".format(
+                    gs_response.status_code), 'warnings': warnings}
             return JsonResponse(json_response, status=500)
 
         # 5. GeoNode Publish
         try:
             layer = publish_in_geonode(out_layer_name, owner=request.user)
-        except:
-            # TODO: roll back the delete geoserver record and db name
-            delete_layer(connection_string, layer=out_layer_name)
+        except Exception as e:
+            # Roll back and delete the created table in database, geoserver and geonode if exist
+            delete_layer(connection_string, str(out_layer_name))
+            cascade_delete_layer(str(out_layer_name))
+            try:
+                Layer.objects.get(name=str(out_layer_name)).delete()
+            finally:
+                print('Layer {} could not be deleted or does not already exist'.format(out_layer_name))
+            print('Error while publishing {} in geonode: {}'.format(out_layer_name, e.message))
             json_response = {
-                "status": False, "message": "Could not publish in GeoNode, Try again or contact the administrator", 'warnings': warnings}
-            return JsonResponse(json_response, status=500)
+                "status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
+            return JsonResponse(json_response, status=400)
 
         json_response = {"status": True, "message": "Line Layer Created Successfully!",
-                            'warnings': warnings, "layer_name": layer.alternate}
+                         'warnings': warnings, "layer_name": layer.alternate}
         return JsonResponse(json_response, status=200)
 
     json_response = {"status": False,
-                        "message": "Error While Publishing!", }
+                     "message": "Error While Publishing!", }
     return JsonResponse(json_response, status=500)
